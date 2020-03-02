@@ -1,10 +1,12 @@
 package io.github.dwlrathod.opengl_poc_plugin;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.util.Log;
 import android.util.LongSparseArray;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -25,6 +27,7 @@ import io.flutter.view.TextureRegistry;
 public class OpenglPocPlugin implements FlutterPlugin, MethodCallHandler {
 
     private TextureRegistry textures;
+    private Context context;
     private LongSparseArray<OpenGLRenderer> renders = new LongSparseArray<>();
 
     private MethodChannel channel;
@@ -32,6 +35,7 @@ public class OpenglPocPlugin implements FlutterPlugin, MethodCallHandler {
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
         textures = flutterPluginBinding.getTextureRegistry();
+        context = flutterPluginBinding.getApplicationContext();
         channel = new MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "opengl_poc_plugin");
         channel.setMethodCallHandler(this);
     }
@@ -44,28 +48,42 @@ public class OpenglPocPlugin implements FlutterPlugin, MethodCallHandler {
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
         Map<String, Number> arguments = (Map<String, Number>) call.arguments;
-        Log.d("OpenglTexturePlugin", call.method + " " + call.arguments.toString());
-        if (call.method.equals("create")) {
-            TextureRegistry.SurfaceTextureEntry entry = textures.createSurfaceTexture();
-            SurfaceTexture surfaceTexture = entry.surfaceTexture();
+        Log.d("Plugin Method: ", call.method + " ");
+        if (call.arguments != null)
+            Log.d("Plugin Arguments: ", call.arguments.toString());
 
-            int width = arguments.get("width").intValue();
-            int height = arguments.get("height").intValue();
-            surfaceTexture.setDefaultBufferSize(width, height);
+        switch (call.method) {
+            case "create": {
+                TextureRegistry.SurfaceTextureEntry entry = textures.createSurfaceTexture();
+                SurfaceTexture surfaceTexture = entry.surfaceTexture();
 
-            SampleRenderWorker worker = new SampleRenderWorker();
-            OpenGLRenderer render = new OpenGLRenderer(surfaceTexture, worker);
+                int width = arguments.get("width").intValue();
+                int height = arguments.get("height").intValue();
+                surfaceTexture.setDefaultBufferSize(width, height);
 
-            renders.put(entry.id(), render);
+                SampleRenderWorker worker = new SampleRenderWorker();
+                OpenGLRenderer render = new OpenGLRenderer(surfaceTexture, worker);
 
-            result.success(entry.id());
-        } else if (call.method.equals("dispose")) {
-            long textureId = arguments.get("textureId").longValue();
-            OpenGLRenderer render = renders.get(textureId);
-            render.onDispose();
-            renders.delete(textureId);
-        } else {
-            result.notImplemented();
+                renders.put(entry.id(), render);
+
+                result.success(entry.id());
+                break;
+            }
+            case "dispose": {
+                long textureId = arguments.get("textureId").longValue();
+                OpenGLRenderer render = renders.get(textureId);
+                render.onDispose();
+                renders.delete(textureId);
+                break;
+            }
+            case "shout": {
+                if (context != null)
+                    Toast.makeText(context, "Hey, Harrys!", Toast.LENGTH_LONG).show();
+                break;
+            }
+            default:
+                result.notImplemented();
+                break;
         }
     }
 

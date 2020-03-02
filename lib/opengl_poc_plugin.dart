@@ -19,4 +19,8 @@ class OpenglPocPlugin {
       _channel.invokeMethod('dispose', {'textureId': textureId});
 
   bool get isInitialized => textureId != null;
+
+  static Future<Null> shout() async {
+    await _channel.invokeMethod('shout');
+  }
 }

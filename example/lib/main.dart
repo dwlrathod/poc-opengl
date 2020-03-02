@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:opengl_poc_plugin/opengl_poc_plugin.dart';
 
 void main() => runApp(MyApp());
@@ -49,8 +48,16 @@ class _MyAppState extends State<MyApp> {
                 : null,
           );
         }),
+        floatingActionButton: new FloatingActionButton.extended(
+            onPressed: () => shout(),
+            label: new Text("Shout out to Harrys"),
+            icon: new Icon(Icons.speaker)),
       ),
     );
+  }
+
+  shout() async {
+    await OpenglPocPlugin.shout();
   }
 
   Future<Null> initializeController() async {
